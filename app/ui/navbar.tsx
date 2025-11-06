@@ -21,20 +21,18 @@ export default function Navbar({ onHomeClick }: NavbarProps) {
             className="flex-shrink-0"
           >
             <span className={`text-2xl font-bold ${primaryColor}`}>
-              抠抠图
+              抠图快手
             </span>
-            <span className="text-gray-500 ml-1">koukoutu.com</span>
+            <span className="text-gray-500 ml-1">koutukuai.com</span>
           </Link>
         </div>
 
         {/* 导航链接 */}
-        <div className="hidden sm:ml-6 sm:flex sm:space-x-8 items-center">
+        {/* <div className="hidden sm:ml-6 sm:flex sm:space-x-8 items-center">
           {[
             { name: '首页', href: '#', isHome: true }, // 首页链接也使用重置逻辑
             { name: '在线批量抠图', href: '#' },
-            { name: '全部工具', href: '#' },
-            { name: '开发者 API', href: '#' },
-            { name: '下载客户端', href: '#' },
+          
           ].map((item) => (
             <Link
               key={item.name}
@@ -45,7 +43,7 @@ export default function Navbar({ onHomeClick }: NavbarProps) {
               {item.name}
             </Link>
           ))}
-        </div>
+        </div> */}
 
         {/* 登录/注册按钮 */}
         <div className="flex items-center space-x-2">

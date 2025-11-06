@@ -5,25 +5,34 @@ import { useState, useRef, useTransition, useEffect, useCallback, DragEvent } fr
 import Image from 'next/image'; 
 import { Plus, Cloud } from 'lucide-react';
 import ImageGridItem from './image-grid-item';
+import ImageEditorModal from './image-editor-modal';
 import { ImageItem, ImageStatus } from '@/app/lib/types';
-
-// 由于不上传，我们不再需要从 actions 导入 S3 相关的函数，只保留模拟的抠图函数。
-// 假设您的 app/actions.ts 中还有 startBatchKoutuAction 函数
 import { startBatchKoutuAction } from '@/app/actions'; 
+
+// 扩展 ImageItem 类型以确保 File 对象存在，用于本地编辑
+interface ExtendedImageItem extends ImageItem {
+    fileObject: File;
+}
 
 const MAX_IMAGES = 12; 
 
 export default function KoutuPortal() {
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [images, setImages] = useState<ExtendedImageItem[]>([]);
   const [isPending, startTransition] = useTransition();
   const [globalMessage, setGlobalMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isDragging, setIsDragging] = useState(false); 
   
+  // 编辑模态框状态
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null); 
 
+  const editingItem = images.find(img => img.id === editingItemId);
+
+
   // **********************************************************
-  // 核心逻辑：文件处理函数 (仅本地展示)
+  // 核心逻辑：文件处理函数 (仅本地展示，不上传 S3)
   // **********************************************************
   const processFiles = async (files: File[]) => {
     console.log(`[PROCESS FILES] 收到 ${files.length} 个文件，开始处理本地展示...`);
@@ -45,7 +54,6 @@ export default function KoutuPortal() {
             continue;
         }
 
-        // 使用 FileReader 读取文件以获取尺寸
         const reader = new FileReader();
         reader.onload = async (e) => {
             const img = new window.Image();
@@ -57,29 +65,24 @@ export default function KoutuPortal() {
 
             img.onload = async () => {
                 const tempId = Date.now().toString() + Math.random().toString(16).slice(2);
-                
-                // 关键点 1: 使用本地 Blob URL 作为图片源
                 const placeholderUrl = URL.createObjectURL(file); 
                 
-                // 关键点 2: 存储 File 对象本身，以备后续（抠图时）需要上传
-                const newItem: ImageItem = {
+                const newItem: ExtendedImageItem = {
                     id: tempId,
                     name: file.name,
                     url: placeholderUrl, 
                     width: img.width,
                     height: img.height,
                     status: '待抠图',
-                    fileObject: file, // 👈 存储原始 File 对象
-                } as ImageItem & { fileObject: File }; // 扩展类型以包含 File 对象
+                    fileObject: file, // 存储原始 File 对象
+                };
                 
                 setImages(current => {
-                    const nextImages = [...current, newItem as ImageItem]; 
+                    const nextImages = [...current, newItem]; 
                     return nextImages.length > MAX_IMAGES ? current : nextImages;
                 });
                 
-               // setGlobalMessage({ type: 'success', text: `图片 ${file.name} 已添加到本地列表，等待抠图。` });
-                
-                // !!! 移除所有 S3 相关的异步代码 !!!
+                //setGlobalMessage({ type: 'success', text: `图片 ${file.name} 已添加到本地列表，等待抠图。` });
             };
             img.src = e.target?.result as string;
         };
@@ -88,7 +91,7 @@ export default function KoutuPortal() {
   };
 
 
-  // 4. 处理文件选择 (来自按钮/拖拽)
+  // 1. 处理文件选择 (来自按钮/拖拽)
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
@@ -96,19 +99,8 @@ export default function KoutuPortal() {
     }
     if (fileInputRef.current) fileInputRef.current.value = ''; 
   };
-  
-  // 1. 删除图片
-  const handleDelete = useCallback((id: string) => {
-    // 关键点 3: 清理本地 URL 资源
-    const itemToDelete = images.find(img => img.id === id);
-    if (itemToDelete) {
-        URL.revokeObjectURL(itemToDelete.url);
-    }
-    setImages(current => current.filter(img => img.id !== id));
-    setGlobalMessage({ type: 'success', text: '图片已从列表中移除。' });
-  }, [images]);
 
-  // 2. 触发文件选择 (与之前相同)
+  // 2. 触发文件选择
   const handleTriggerUpload = () => {
     if (images.length >= MAX_IMAGES) {
         setGlobalMessage({ type: 'error', text: `最多只能上传 ${MAX_IMAGES} 张图片。` });
@@ -116,12 +108,9 @@ export default function KoutuPortal() {
     }
     fileInputRef.current?.click();
   };
-
-  // **********************************************************
-  // 3. 开始批量抠图 (模拟 S3 逻辑)
-  // **********************************************************
+  
+  // 3. 开始批量抠图
   const handleStartKoutu = async () => {
-    // 在这里，我们将模拟 S3 上传逻辑转移到“开始抠图”按钮中
     const pendingImages = images.filter(img => img.status === '待抠图');
 
     if (pendingImages.length === 0) {
@@ -129,20 +118,16 @@ export default function KoutuPortal() {
         return;
     }
     
-    // 假设：如果现在开始抠图，需要将图片上传到云端
-    setGlobalMessage({ type: 'success', text: `模拟开始 ${pendingImages.length} 个抠图任务 (假定此时才上传 S3)...` });
+    setGlobalMessage({ type: 'success', text: `模拟开始 ${pendingImages.length} 个抠图任务...` });
     
-    // 1. 更新状态为“抠图中”
     setImages(current => current.map(img => 
         img.status === '待抠图' ? { ...img, status: '抠图中' } : img
     ));
 
-    // 2. 模拟抠图 API 调用 (使用原来 S3 逻辑中的模拟延迟)
     // 实际项目中：在这里发起 S3 上传或直接发送图片数据给抠图服务器
     const mockKeys = pendingImages.map(img => img.name);
     await startBatchKoutuAction(mockKeys); 
 
-    // 3. 模拟抠图完成
     setImages(current => current.map(img => 
         img.status === '抠图中' ? { ...img, status: '抠图完毕' } : img
     ));
@@ -150,8 +135,52 @@ export default function KoutuPortal() {
   };
 
 
+  // 4. 删除图片
+  const handleDelete = useCallback((id: string) => {
+    const itemToDelete = images.find(img => img.id === id);
+    if (itemToDelete) {
+        URL.revokeObjectURL(itemToDelete.url); // 清理 Blob URL
+    }
+    setImages(current => current.filter(img => img.id !== id));
+    setGlobalMessage({ type: 'success', text: '图片已从列表中移除。' });
+  }, [images]);
+  
+  // 5. 触发编辑模态框
+  const handleEdit = useCallback((id: string) => {
+    setEditingItemId(id);
+  }, []);
+  
+  // 6. 保存编辑结果
+  const handleSaveEdit = useCallback((id: string, newBlob: Blob, newWidth: number, newHeight: number) => {
+    const originalItem = images.find(item => item.id === id);
+    if (!originalItem) return;
+
+    // 创建新的 File 对象（用于新的图片源）
+    const newFile = new File([newBlob], `Edited_${id}_${originalItem.name}`, { type: newBlob.type || 'image/png' });
+    const newUrl = URL.createObjectURL(newFile);
+
+    setImages(current => current.map(item => {
+        if (item.id === id) {
+            URL.revokeObjectURL(item.url); // 释放旧的 Blob URL 内存
+            
+            return {
+                ...item,
+                url: newUrl, 
+                width: newWidth,
+                height: newHeight,
+                fileObject: newFile, // 存储编辑后的 File 对象
+                status: '待抠图' // 编辑后重置状态
+            } as ExtendedImageItem;
+        }
+        return item;
+    }));
+    setEditingItemId(null);
+    setGlobalMessage({ type: 'success', text: `图片 ${originalItem.name} 已编辑并保存。` });
+  }, [images]);
+
+
   // **********************************************************
-  // 拖放和粘贴逻辑 (保持不变)
+  // 拖放处理函数
   // **********************************************************
   const handleDragEnter = (e: DragEvent) => {
     e.preventDefault();
@@ -209,11 +238,10 @@ export default function KoutuPortal() {
     }
   };
 
+  // **********************************************************
+  // 生命周期钩子：粘贴事件和 Blob URL 清理
+  // **********************************************************
   useEffect(() => {
-    // 关键点 4: 移除 localStorage 读取，确保每次刷新都是初始状态
-    // const saved = localStorage.getItem('koutu_images');
-    // if (saved) { setImages(JSON.parse(saved)); }
-
     const handlePaste = (event: ClipboardEvent) => {
       const items = event.clipboardData?.items;
       if (!items) return;
@@ -241,13 +269,10 @@ export default function KoutuPortal() {
 
     return () => {
       document.removeEventListener('paste', handlePaste);
-      // 关键点 5: 在组件卸载时，释放所有本地 Blob URL 占用的内存
+      // 在组件卸载时，释放所有本地 Blob URL 占用的内存
       images.forEach(item => URL.revokeObjectURL(item.url));
     };
-  }, []); 
-
-  // 关键点 6: 移除 localStorage 写入，不再持久化状态
-  // useEffect(() => { localStorage.setItem('koutu_images', JSON.stringify(images)); }, [images]);
+  }, [images]); 
 
   const hasPendingImages = images.some(img => img.status === '待抠图' || img.status === '抠图中');
   const uploadedCount = images.length;
@@ -255,10 +280,9 @@ export default function KoutuPortal() {
   const dropZoneBorderClass = isDragging ? 'border-blue-500 ring-4 ring-blue-200' : 'border-gray-200';
 
   return (
-    // ... (JSX 结构与之前完全相同) ...
     <div className="space-y-10">
       
-      {/* 初始状态展示区：同时作为拖放区域 */}
+      {/* 初始状态展示区 */}
       {uploadedCount === 0 && (
         <div 
             ref={dropZoneRef} 
@@ -290,7 +314,7 @@ export default function KoutuPortal() {
                         onClick={handleTriggerUpload} 
                     >
                         <Cloud className="w-6 h-6" />
-                        <span>上传图片</span>
+                        <span>选择图片</span>
                     </button>
                     <p className="text-gray-500 text-sm mt-2">
                         Ctrl+V **粘贴图片**，或者把图片**拖拽**到这里！
@@ -323,9 +347,14 @@ export default function KoutuPortal() {
                 </div>
             )}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"> 
                 {images.map(item => (
-                    <ImageGridItem key={item.id} item={item} onDelete={handleDelete} />
+                    <ImageGridItem 
+                        key={item.id} 
+                        item={item} 
+                        onDelete={handleDelete} 
+                        onEdit={handleEdit} 
+                    />
                 ))}
 
                 {/* 添加图片占位按钮 */}
@@ -363,6 +392,15 @@ export default function KoutuPortal() {
         className="hidden"
         multiple
       />
+      
+      {/* 图片编辑模态框 */}
+      {editingItem && (
+          <ImageEditorModal 
+              item={editingItem} 
+              onSave={handleSaveEdit} 
+              onClose={() => setEditingItemId(null)} 
+          />
+      )}
     </div>
   );
 }
