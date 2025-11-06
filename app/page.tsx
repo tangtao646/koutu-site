@@ -1,65 +1,54 @@
-import Image from "next/image";
+// app/page.tsx
+'use client'; // 👈 **注意：为了管理客户端状态和重置，page.tsx 必须改为客户端组件**
 
-export default function Home() {
+import { useState, useCallback } from 'react';
+import Navbar from './ui/navbar'; 
+import KoutuPortal from './ui/koutu-portal'; 
+
+export default function HomePage() {
+  const primaryColor = 'text-blue-600';
+  // 使用 key 来强制重置 KoutuPortal 组件及其内部所有状态 (包括 localStorage 读取)
+  const [portalKey, setPortalKey] = useState(0); 
+
+  const handleHomeReset = useCallback(() => {
+    // 1. 清除 localStorage 缓存
+    localStorage.removeItem('koutu_images');
+    
+    // 2. 增加 key 的值，Next.js/React 会销毁旧的 KoutuPortal 实例，并创建一个新的，从而重置其所有内部状态。
+    setPortalKey(prevKey => prevKey + 1);
+    
+    // 3. 确保导航到根路径 (如果当前不在根路径)
+    if (window.location.pathname !== '/') {
+        window.location.href = '/';
+    }
+
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-gray-50">
+      <Navbar onHomeClick={handleHomeReset} /> {/* 传递重置函数 */}
+      
+      <main className="max-w-5xl mx-auto px-4 py-12 text-center">
+        
+        {/* 顶部信息区域 */}
+        <div className="space-y-4 mb-10">
+          <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+            抠图模型 v3.6
+          </span>
+          <p className="text-sm text-gray-500">
+            更新时间：2025年10月27日 12:00，提升抠图效果。
+            <a href="#" className={`underline ${primaryColor} ml-1`}>欢迎加入产品反馈意见</a>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        {/* 核心功能门户，使用 key 属性进行重置 */}
+        <KoutuPortal key={portalKey} />
+        
       </main>
+
+      <footer className="text-center text-gray-400 text-sm mt-12 pb-4">
+          © 2025 您的公司名称. 保留所有权利.
+      </footer>
     </div>
   );
 }
