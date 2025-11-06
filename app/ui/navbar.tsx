@@ -1,11 +1,15 @@
 // app/ui/navbar.tsx
 import Link from 'next/link';
+import { useState } from 'react';
+import { dictionaries, getDictionary } from '@/app/lib/i18n'; // 💥 引入 I18N 字典和默认语言
 
 interface NavbarProps {
-    onHomeClick: () => void; // 添加点击 Logo/首页时的回调函数
+  onHomeClick: () => void; // 添加点击 Logo/首页时的回调函数
 }
 
 export default function Navbar({ onHomeClick }: NavbarProps) {
+  const [locale, setLocale] = useState<keyof typeof dictionaries>('zh-CN'); // 初始设置为中文
+  const t = getDictionary(locale); // 获取翻译函数
   const primaryColor = 'text-blue-600'; // 抠抠图的品牌蓝
   const primaryBg = 'bg-blue-600 hover:bg-blue-700';
 
@@ -15,15 +19,15 @@ export default function Navbar({ onHomeClick }: NavbarProps) {
         {/* Logo 和品牌名 */}
         <div className="flex items-center">
           {/* 使用 Link 组件，但通过 onClick 来拦截并执行重置逻辑 */}
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             onClick={onHomeClick} // 👈 **关键：点击时执行重置逻辑**
             className="flex-shrink-0"
           >
             <span className={`text-2xl font-bold ${primaryColor}`}>
-              抠图快手
+              {t.Navigation.title}
             </span>
-            <span className="text-gray-500 ml-1">koutukuai.com</span>
+            <span className="text-gray-500 ml-1">{t.Navigation.domain}</span>
           </Link>
         </div>
 
@@ -48,10 +52,10 @@ export default function Navbar({ onHomeClick }: NavbarProps) {
         {/* 登录/注册按钮 */}
         <div className="flex items-center space-x-2">
           <button className={`px-4 py-1.5 text-sm font-medium rounded ${primaryColor} border border-blue-600 hover:bg-blue-50 transition-colors`}>
-            登录
+            {t.Welcome.loginButton}
           </button>
           <button className={`px-4 py-1.5 text-sm font-medium rounded text-white ${primaryBg} transition-colors`}>
-            免费注册
+            {t.Welcome.registerButton}
           </button>
         </div>
       </div>

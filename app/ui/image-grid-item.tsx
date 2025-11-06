@@ -5,22 +5,35 @@ import Image from 'next/image';
 import { Trash2, CropIcon, X } from 'lucide-react'; // 引入 X 用于模态框
 import { useState } from 'react';
 import { ImageItem } from '@/app/lib/types'; // 确保 ImageItem 定义正确
+// 💥 引入本地国际化工具
+import { getDictionary, dictionaries } from '@/app/lib/i18n';
 
 interface ImageGridItemProps {
   item: ImageItem;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
+  // 💥 NEW: 接收当前语言
+  locale: keyof typeof dictionaries;
 }
 
-export default function ImageGridItem({ item, onDelete, onEdit }: ImageGridItemProps) {
+export default function ImageGridItem({ item, onDelete, onEdit, locale }: ImageGridItemProps) {
   // 💥 NEW: 状态管理确认删除对话框的显示
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const statusColors = {
-    '待抠图': 'bg-blue-100 text-blue-600',
-    '抠图中': 'bg-yellow-100 text-yellow-600 animate-pulse',
-    '抠图完毕': 'bg-green-100 text-green-600',
+  // 💥 获取当前语言的翻译
+  const t = getDictionary(locale);
+
+  // 💥 使用翻译后的状态文本
+  const translatedStatus = t.Status[item.status as keyof typeof t.Status];
+
+ // 使用翻译后的状态文本作为键名 (假设状态字符串是唯一的)
+  const statusColors: Record<string, string> = {
+    [t.Status.pending]: 'bg-blue-100 text-blue-600',
+    [t.Status.processing]: 'bg-yellow-100 text-yellow-600 animate-pulse',
+    [t.Status.completed]: 'bg-green-100 text-green-600',
   };
+
+  
 
   const handleDeleteClick = () => {
     setShowConfirmModal(true);
@@ -52,23 +65,23 @@ export default function ImageGridItem({ item, onDelete, onEdit }: ImageGridItemP
         </div>
 
         {/* 按钮容器：包括编辑和删除 */}
-        {item.status !== '抠图中' && (
+       {item.status !== t.Status.processing && (
           <div className="absolute top-1 right-1 flex space-x-1 z-10 opacity-100">
 
             {/* 编辑按钮 */}
             <button
               onClick={() => onEdit(item.id)}
               className="p-1 bg-blue-500 text-white rounded-full transition-colors hover:bg-blue-700"
-              title="编辑图片"
+              title={t.Portal.editButton} // 💥 使用翻译
             >
               <CropIcon className="w-4 h-4" />
             </button>
 
-            {/* 删除按钮 💥 (点击时打开模态框) */}
+            {/* 删除按钮 */}
             <button
               onClick={handleDeleteClick}
               className="p-1 bg-red-500 text-white rounded-full transition-colors hover:bg-red-700"
-              title="删除图片"
+              title={t.Portal.deleteButton} // 💥 使用翻译
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -91,7 +104,7 @@ export default function ImageGridItem({ item, onDelete, onEdit }: ImageGridItemP
 
             {/* 状态 (在后) */}
             <span className={`px-2 py-0.5 rounded-full font-medium ${statusColors[item.status]} whitespace-nowrap`}>
-              {item.status}
+              {translatedStatus} {/* 💥 使用翻译后的状态文本 */}
             </span>
           </div>
 
@@ -105,7 +118,7 @@ export default function ImageGridItem({ item, onDelete, onEdit }: ImageGridItemP
             
             {/* 头部 */}
             <div className="flex justify-between items-center border-b pb-3 mb-4">
-              <h3 className="text-lg font-bold text-red-600">确认删除</h3>
+             <h3 className="text-lg font-bold text-red-600">{t.Portal.confirmDeleteTitle}</h3> {/* 💥 翻译标题 */}
               <button onClick={handleCancelDelete} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -113,7 +126,7 @@ export default function ImageGridItem({ item, onDelete, onEdit }: ImageGridItemP
             
             {/* 内容 */}
             <p className="text-gray-700 mb-6">
-              您确定要删除图片 **{item.name}** 吗？此操作不可撤销。
+              {t.Portal.confirmDeleteMessage(item.name)} {/* 💥 翻译内容 (带参数) */}
             </p>
             
             {/* 底部操作按钮 */}
@@ -122,13 +135,13 @@ export default function ImageGridItem({ item, onDelete, onEdit }: ImageGridItemP
                 onClick={handleCancelDelete}
                 className="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
               >
-                取消
+              {t.Portal.cancelButton} {/* 💥 翻译按钮 */}
               </button>
               <button
                 onClick={handleConfirmDelete}
                 className="px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors"
               >
-                确定删除
+                {t.Portal.confirmButton} {/* 💥 翻译按钮 */}
               </button>
             </div>
           </div>
