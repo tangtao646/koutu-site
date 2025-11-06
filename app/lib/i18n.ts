@@ -82,7 +82,7 @@ const zhCNMessages: Messages = {
 // ==========================================================
 const enMessages: Messages = {
   Navigation: {
-    title: "AI Background Removal Tool",
+    title: "Koutu KuaiShou",
     domain: "koutukuai.com",
   },
   General: {
@@ -148,4 +148,34 @@ export const translateStatus = (
   locale: keyof typeof dictionaries = defaultLocale
 ): string => {
   return getDictionary(locale).Status[status];
+};
+
+/**
+ * 动态获取浏览器首选语言，并映射到我们支持的语言
+ * * @returns 支持的语言键名 (keyof typeof dictionaries)
+ */
+export const getInitialLocale = (): keyof typeof dictionaries => {
+    // 1. 检查浏览器是否支持 navigator (防止 SSR 报错)
+    if (typeof window === 'undefined' || !navigator.language) {
+        return defaultLocale;
+    }
+    
+    // 2. 获取浏览器首选语言，并转换为小写，例如 "en-US" -> "en-us"
+    const browserLang = navigator.language.toLowerCase();
+
+    // 3. 检查是否直接匹配我们支持的语言 (例如 'zh-cn' 或 'en')
+    if (dictionaries.hasOwnProperty(browserLang)) {
+        // 强制转换为正确的类型并返回
+        return browserLang as keyof typeof dictionaries;
+    }
+    
+    // 4. 检查是否匹配语言族群 (例如 'en-us' 匹配 'en')
+    const langFamily = browserLang.split('-')[0];
+    if (dictionaries.hasOwnProperty(langFamily)) {
+        // 强制转换为正确的类型并返回
+        return langFamily as keyof typeof dictionaries;
+    }
+
+    // 5. 无法匹配，则回退到默认语言
+    return defaultLocale;
 };

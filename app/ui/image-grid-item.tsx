@@ -26,14 +26,14 @@ export default function ImageGridItem({ item, onDelete, onEdit, locale }: ImageG
   // 💥 使用翻译后的状态文本
   const translatedStatus = t.Status[item.status as keyof typeof t.Status];
 
- // 使用翻译后的状态文本作为键名 (假设状态字符串是唯一的)
+  // 使用翻译后的状态文本作为键名 (假设状态字符串是唯一的)
   const statusColors: Record<string, string> = {
     [t.Status.pending]: 'bg-blue-100 text-blue-600',
     [t.Status.processing]: 'bg-yellow-100 text-yellow-600 animate-pulse',
     [t.Status.completed]: 'bg-green-100 text-green-600',
   };
 
-  
+
 
   const handleDeleteClick = () => {
     setShowConfirmModal(true);
@@ -65,7 +65,7 @@ export default function ImageGridItem({ item, onDelete, onEdit, locale }: ImageG
         </div>
 
         {/* 按钮容器：包括编辑和删除 */}
-       {item.status !== t.Status.processing && (
+        {item.status !== t.Status.processing && (
           <div className="absolute top-1 right-1 flex space-x-1 z-10 opacity-100">
 
             {/* 编辑按钮 */}
@@ -115,27 +115,27 @@ export default function ImageGridItem({ item, onDelete, onEdit, locale }: ImageG
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/10  backdrop-blur-sm">
           <div className="bg-white rounded-lg shadow-2xl p-6 max-w-sm w-full transform transition-all">
-            
+
             {/* 头部 */}
             <div className="flex justify-between items-center border-b pb-3 mb-4">
-             <h3 className="text-lg font-bold text-red-600">{t.Portal.confirmDeleteTitle}</h3> {/* 💥 翻译标题 */}
+              <h3 className="text-lg font-bold text-red-600">{t.Portal.confirmDeleteTitle}</h3> {/* 💥 翻译标题 */}
               <button onClick={handleCancelDelete} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             {/* 内容 */}
             <p className="text-gray-700 mb-6">
               {t.Portal.confirmDeleteMessage(item.name)} {/* 💥 翻译内容 (带参数) */}
             </p>
-            
+
             {/* 底部操作按钮 */}
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleCancelDelete}
                 className="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
               >
-              {t.Portal.cancelButton} {/* 💥 翻译按钮 */}
+                {t.Portal.cancelButton} {/* 💥 翻译按钮 */}
               </button>
               <button
                 onClick={handleConfirmDelete}

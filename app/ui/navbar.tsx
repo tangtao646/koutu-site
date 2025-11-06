@@ -1,14 +1,14 @@
 // app/ui/navbar.tsx
 import Link from 'next/link';
 import { useState } from 'react';
-import { dictionaries, getDictionary } from '@/app/lib/i18n'; // 💥 引入 I18N 字典和默认语言
+import { getInitialLocale,dictionaries, getDictionary } from '@/app/lib/i18n'; // 💥 引入 I18N 字典和默认语言
 
 interface NavbarProps {
   onHomeClick: () => void; // 添加点击 Logo/首页时的回调函数
 }
 
 export default function Navbar({ onHomeClick }: NavbarProps) {
-  const [locale, setLocale] = useState<keyof typeof dictionaries>('zh-CN'); // 初始设置为中文
+  const [locale, setLocale] = useState<keyof typeof dictionaries>(getInitialLocale()); // 初始设置为中文
   const t = getDictionary(locale); // 获取翻译函数
   const primaryColor = 'text-blue-600'; // 抠抠图的品牌蓝
   const primaryBg = 'bg-blue-600 hover:bg-blue-700';

@@ -8,7 +8,7 @@ import ImageGridItem from './image-grid-item';
 import ImageEditorModal from './image-editor-modal';
 import { ImageItem, ImageStatus } from '@/app/lib/types';
 import { startBatchKoutuAction } from '@/app/actions';
-import { getDictionary, dictionaries } from '@/app/lib/i18n'; // 💥 引入 I18N 字典和默认语言
+import { getInitialLocale,getDictionary, dictionaries } from '@/app/lib/i18n'; // 💥 引入 I18N 字典和默认语言
 
 // 扩展 ImageItem 类型以确保 File 对象存在，用于本地编辑
 interface ExtendedImageItem extends ImageItem {
@@ -20,7 +20,7 @@ const MAX_IMAGES = 12;
 export default function KoutuPortal() {
 
     // 💥 NEW: 管理语言状态
-    const [locale, setLocale] = useState<keyof typeof dictionaries>('zh-CN'); // 初始设置为中文
+    const [locale, setLocale] = useState<keyof typeof dictionaries>(getInitialLocale()); // 初始设置为中文
     const t = getDictionary(locale); // 获取翻译函数
     const [images, setImages] = useState<ExtendedImageItem[]>([]);
     const [isPending, startTransition] = useTransition();
