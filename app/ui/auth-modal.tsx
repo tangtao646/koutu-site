@@ -7,6 +7,7 @@ import { SiFacebook, SiGoogle } from 'react-icons/si';
 import { Messages } from '@/app/lib/i18n';
 import Link from 'next/link';
 
+
 // 假设我们支持的 Tab
 type AuthTab = 'login' | 'signup';
 
