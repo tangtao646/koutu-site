@@ -29,8 +29,15 @@ export interface Messages {
     confirmDeleteMessage: (name: string) => string;
     cancelButton: string;
     confirmButton: string;
-    editButton: string;
     deleteButton: string;
+  };
+  Editor: {
+    cropButton: string;
+    resetButton: string;
+    resetDescription?: string;
+    cancelButton: string;
+    saving: string;
+    saveButton: string;
   };
   Status: {
     pending: string;
@@ -67,9 +74,16 @@ const zhCNMessages: Messages = {
     confirmDeleteMessage: (name) => `您确定要删除图片 ${name} 吗？此操作不可撤销。`,
     cancelButton: "取消",
     confirmButton: "确定删除",
-    editButton: "编辑图片",
     deleteButton: "删除图片",
   },
+  Editor: {
+    cropButton: "图片裁剪",
+    resetButton: "重置",
+    resetDescription: "重置裁剪区域 (恢复初始边距)",
+    cancelButton: "取消",
+    saving: "保存中...",
+    saveButton: "保存",
+  },  
   Status: {
     pending: "待抠图",
     processing: "抠图中",
@@ -82,7 +96,7 @@ const zhCNMessages: Messages = {
 // ==========================================================
 const enMessages: Messages = {
   Navigation: {
-    title: "Koutu KuaiShou",
+    title: "Remove bg Fast",
     domain: "koutukuai.com",
   },
   General: {
@@ -105,8 +119,15 @@ const enMessages: Messages = {
     confirmDeleteMessage: (name) => `Are you sure you want to delete ${name}? This action cannot be undone.`,
     cancelButton: "Cancel",
     confirmButton: "Confirm Delete",
-    editButton: "Edit Image",
     deleteButton: "Delete Image",
+  },
+  Editor: {
+    cropButton: "Crop Image",
+    resetButton: "Reset",
+    resetDescription: "Reset crop area (restore initial margins)",
+    cancelButton: "Cancel",
+    saving: "Saving...",
+    saveButton: "Save",
   },
   Status: {
     pending: "Pending",

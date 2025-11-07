@@ -3,7 +3,9 @@
 
 import { ImageItem } from '@/app/lib/types';
 import { useState, useRef, useEffect, useCallback, MouseEvent } from 'react';
-import { Save, X, Crop as CropIcon } from 'lucide-react'; 
+import { Save, X, Crop as CropIcon } from 'lucide-react';
+// 💥 引入本地国际化工具
+import { getInitialLocale, getDictionary, dictionaries } from '@/app/lib/i18n';
 
 interface Crop {
     x: number; // 裁剪框左上角相对于图片左上角的像素坐标 (原始像素)
@@ -24,28 +26,31 @@ const INITIAL_MARGIN_PX = 30; // 初始裁剪框内边距 (像素)
 export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorModalProps) {
     const [crop, setCrop] = useState<Crop>({ x: 0, y: 0, width: 0, height: 0 }); // 裁剪框的像素值
     const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
-    
+    // 💥 NEW: 管理语言状态
+    const [locale, setLocale] = useState<keyof typeof dictionaries>(getInitialLocale()); // 初始设置为中文
+    const t = getDictionary(locale); // 获取翻译函数
+
     // 💥 NEW: 布局稳定状态，只有为 true 时才渲染裁剪框和遮罩
-    const [layoutStabilized, setLayoutStabilized] = useState(false); 
+    const [layoutStabilized, setLayoutStabilized] = useState(false);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const previewWrapperRef = useRef<HTMLDivElement>(null); 
+    const previewWrapperRef = useRef<HTMLDivElement>(null);
 
     const [isSaving, setIsSaving] = useState(false);
 
     // 拖拽和调整大小状态
-    const [isResizing, setIsResizing] = useState<string | null>(null); 
-    const [isDraggingCrop, setIsDraggingCrop] = useState(false); 
+    const [isResizing, setIsResizing] = useState<string | null>(null);
+    const [isDraggingCrop, setIsDraggingCrop] = useState(false);
     const startMouseX = useRef(0);
     const startMouseY = useRef(0);
-    const startCrop = useRef<Crop>({ x: 0, y: 0, width: 0, height: 0 }); 
+    const startCrop = useRef<Crop>({ x: 0, y: 0, width: 0, height: 0 });
 
     /**
      * 根据当前图片尺寸计算并返回初始裁剪区域 (包含 30px 边距)
      */
     const getInitialCrop = useCallback((originalW: number, originalH: number): Crop => {
         const margin = INITIAL_MARGIN_PX;
-        
+
         let x = margin;
         let y = margin;
         let width = originalW - 2 * margin;
@@ -66,17 +71,17 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
     useEffect(() => {
         const img = new window.Image();
         img.crossOrigin = "anonymous";
-        
+
         img.onload = () => {
             setOriginalImage(img);
-            
+
             const initialCrop = getInitialCrop(img.naturalWidth, img.naturalHeight);
             setCrop(initialCrop);
-            
+
             // 首次设置裁剪区域后，进入布局稳定检测
             setLayoutStabilized(false);
         };
-        
+
         const originalUrl = URL.createObjectURL(item.fileObject);
         img.src = originalUrl;
 
@@ -85,7 +90,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         };
     }, [item.fileObject, getInitialCrop]);
 
-    
+
     // 💥 NEW: 布局稳定检测
     useEffect(() => {
         if (!originalImage) return;
@@ -120,7 +125,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         const handleWindowResize = () => {
             // 窗口大小改变时，重置稳定状态，强制重新计算
             setLayoutStabilized(false);
-            
+
             let frameId: number;
             const checkResizeStability = () => {
                 const wrapper = previewWrapperRef.current;
@@ -136,9 +141,9 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
                 if (frameId) cancelAnimationFrame(frameId);
             };
         };
-        
+
         window.addEventListener('resize', handleWindowResize);
-        
+
         return () => {
             window.removeEventListener('resize', handleWindowResize);
         };
@@ -155,7 +160,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         if (!ctx) return;
 
         const { naturalWidth: originalW, naturalHeight: originalH } = img;
-        
+
         const canvasW = originalW;
         const canvasH = originalH;
 
@@ -174,7 +179,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
             originalW,
             originalH
         );
-        ctx.restore(); 
+        ctx.restore();
     }, []);
 
     useEffect(() => {
@@ -196,17 +201,17 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         if (!wrapper || !originalImage) return;
 
         const wrapperRect = wrapper.getBoundingClientRect();
-        
+
         const mouseXInWrapper = e.clientX - wrapperRect.left;
         const mouseYInWrapper = e.clientY - wrapperRect.top;
-        
+
         startMouseX.current = mouseXInWrapper;
         startMouseY.current = mouseYInWrapper;
         startCrop.current = { ...crop };
 
         if (target.dataset.handler) {
             setIsResizing(target.dataset.handler);
-        } else if (target.classList.contains('crop-box')) { 
+        } else if (target.classList.contains('crop-box')) {
             setIsDraggingCrop(true);
         }
     }, [crop, originalImage, layoutStabilized]);
@@ -225,11 +230,11 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         // 实时计算图像渲染尺寸 (这是关键)
         const wrapperRect = wrapper.getBoundingClientRect();
         const { naturalWidth: originalW, naturalHeight: originalH } = originalImage;
-        
+
         const imgCanvasWidth = originalW;
         const imgCanvasHeight = originalH;
         const canvasAspectRatio = imgCanvasWidth / imgCanvasHeight;
-        
+
         let imgRenderWidth = wrapperRect.width;
         let imgRenderHeight = wrapperRect.height;
         let imgRenderOffsetX = 0;
@@ -244,10 +249,10 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
             imgRenderWidth = wrapperRect.height * canvasAspectRatio;
             imgRenderOffsetX = (wrapperRect.width - imgRenderWidth) / 2;
         }
-        
+
         let totalVisualScale = 1;
         if (originalW > 0) {
-            totalVisualScale = imgRenderWidth / originalW; 
+            totalVisualScale = imgRenderWidth / originalW;
         }
 
         const mouseCurrentXInWrapper = e.clientX - wrapperRect.left;
@@ -260,7 +265,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         const dy_original = dy_display / totalVisualScale;
 
         let newCrop = { ...startCrop.current };
-        const minSize = MIN_CROP_SIZE_PX / totalVisualScale; 
+        const minSize = MIN_CROP_SIZE_PX / totalVisualScale;
 
         if (isDraggingCrop) {
             // ... (拖拽逻辑保持不变)
@@ -334,7 +339,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         }
 
         setCrop(newCrop);
-    }, [isResizing, isDraggingCrop, originalImage]); 
+    }, [isResizing, isDraggingCrop, originalImage]);
 
 
     const handleMouseUp = useCallback(() => {
@@ -361,7 +366,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
     // 保存并导出图片 (保持不变)
     const handleSave = () => {
         if (!originalImage) return;
-        
+
         setIsSaving(true);
 
         const finalCanvas = document.createElement('canvas');
@@ -378,13 +383,13 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         finalCanvas.height = croppedHeight;
 
         finalCtx.save();
-        
+
         finalCtx.drawImage(
-            originalImage, 
-            crop.x, 
-            crop.y, 
-            crop.width, 
-            crop.height, 
+            originalImage,
+            crop.x,
+            crop.y,
+            crop.width,
+            crop.height,
             0,
             0,
             finalCanvas.width,
@@ -402,12 +407,12 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
             setIsSaving(false);
         }, 'image/png');
     };
-    
+
     // --- JSX 样式和计算 ---
     if (!originalImage) return null;
 
     const { naturalWidth: originalW, naturalHeight: originalH } = originalImage;
-    
+
     // 实时计算当前显示指标
     const wrapper = previewWrapperRef.current;
     let totalVisualScale = 1;
@@ -436,9 +441,9 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
             imgDisplayWidth = wrapperHeight * canvasAspectRatio;
             imgDisplayOffsetX = (wrapperWidth - imgDisplayWidth) / 2;
         }
-        
+
         if (originalW > 0) {
-            totalVisualScale = imgDisplayWidth / originalW; 
+            totalVisualScale = imgDisplayWidth / originalW;
         }
     }
 
@@ -456,14 +461,14 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
         height: `${cropBoxHeight}px`,
         cursor: isDraggingCrop ? 'grabbing' : (isResizing ? 'grabbing' : 'move'),
     };
-    
+
     // 蒙版样式 (实现半透明遮罩) 
     const overlayTopStyle = { top: 0, left: 0, right: 0, height: cropBoxTop };
     const overlayBottomStyle = { bottom: 0, left: 0, right: 0, height: wrapperHeight - cropBoxTop - cropBoxHeight };
     const overlayLeftStyle = { top: cropBoxTop, left: 0, width: cropBoxLeft, height: cropBoxHeight };
     const overlayRightStyle = { top: cropBoxTop, right: 0, width: wrapperWidth - cropBoxLeft - cropBoxWidth, height: cropBoxHeight };
 
-    
+
     const modalClasses = "fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 backdrop-blur-sm transition-opacity duration-300";
     const contentClasses = "bg-white rounded-xl shadow-2xl w-[90vw] h-[90vh] max-w-[1000px] max-h-[800px] flex flex-col overflow-hidden";
     const headerClasses = "flex justify-between items-center p-4 border-b border-gray-200";
@@ -471,35 +476,35 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
     return (
         <div className={modalClasses}>
             <div className={contentClasses}>
-                
+
                 {/* 头部 (保持不变) */}
                 <div className={headerClasses}>
-                    
-                    <h2 className="text-xl font-bold text-gray-800">图片裁剪：{item.name}</h2>
-                    
+
+                    <h2 className="text-xl font-bold text-gray-800">{t.Editor.cropButton}：{item.name}</h2>
+
                     {/* 顶部工具栏 (左侧控制) */}
-                    <div className="flex space-x-4 mx-auto"> 
+                    <div className="flex space-x-4 mx-auto">
                         {/* 裁剪重置 */}
-                        <button 
+                        <button
                             onClick={() => {
                                 setCrop(getInitialCrop(originalW, originalH));
-                                setLayoutStabilized(false); // 重置后强制重新检查布局
-                            }} 
+                                setLayoutStabilized(true); // 重置后强制重新检查布局
+                            }}
                             className="flex items-center space-x-2 py-1.5 px-3 text-sm border border-gray-300 rounded-md shadow-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            title={`重置裁剪区域 (恢复初始边距)`}
+                            title={t.Editor.resetDescription || ''}
                         >
                             <CropIcon className="w-4 h-4" />
-                            <span>重置裁剪区域</span>
+                            <span>{t.Editor.resetButton}</span>
                         </button>
                     </div>
 
                     {/* 顶部右侧的取消和保存按钮 */}
                     <div className="flex space-x-3 items-center">
-                         <button 
-                            onClick={onClose} 
+                        <button
+                            onClick={onClose}
                             className="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
                         >
-                            取消
+                            {t.Editor.cancelButton}
                         </button>
                         <button
                             onClick={handleSave}
@@ -507,7 +512,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
                             className="px-4 py-2 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 flex items-center space-x-2"
                         >
                             <Save className="w-4 h-4" />
-                            <span>{isSaving ? '保存中...' : '保存'}</span>
+                            <span>{isSaving ? t.Editor.saving : t.Editor.saveButton}</span>
                         </button>
                         {/* 关闭按钮在最右侧 */}
                         <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600">
@@ -515,22 +520,22 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
                         </button>
                     </div>
                 </div>
-                
+
                 {/* 编辑区主体 (保持不变) */}
                 <div className="flex-grow flex flex-col bg-gray-50 p-4">
 
                     {/* 图片预览区 & 裁剪框 */}
-                    <div 
+                    <div
                         ref={previewWrapperRef}
                         className="flex-1 min-w-0 flex items-center justify-center relative rounded-lg bg-gray-100"
                         onMouseDown={handleMouseDown}
                     >
                         {/* 实际绘制图像的 Canvas */}
-                        <canvas 
-                            ref={canvasRef} 
-                            className="max-w-full max-h-full shadow-lg border border-gray-300 pointer-events-none" 
+                        <canvas
+                            ref={canvasRef}
+                            className="max-w-full max-h-full shadow-lg border border-gray-300 pointer-events-none"
                         />
-                        
+
                         {/* 裁剪蒙版 (50% 不透明度) */}
                         <div className="absolute inset-0 pointer-events-none z-10">
                             {layoutStabilized && (
@@ -545,7 +550,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
 
                         {/* 裁剪框本身 (可拖拽和调整大小) */}
                         {layoutStabilized && totalVisualScale > 0 && (
-                            <div 
+                            <div
                                 className={`crop-box absolute border-2 border-blue-500 box-border z-20 ${isDraggingCrop ? 'cursor-grabbing' : 'cursor-move'}`}
                                 style={cropBoxStyle}
                             >
@@ -562,7 +567,7 @@ export default function ImageEditorModal({ item, onSave, onClose }: ImageEditorM
                         )}
                     </div>
                 </div>
-                
+
             </div>
             {/* 裁剪框手柄的样式 (保持不变) */}
             <style jsx>{`
