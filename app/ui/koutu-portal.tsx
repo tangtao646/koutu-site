@@ -8,20 +8,22 @@ import ImageGridItem from './image-grid-item';
 import ImageEditorModal from './image-editor-modal';
 import { ImageItem, ImageStatus } from '@/app/lib/types';
 import { startBatchKoutuAction } from '@/app/actions';
-import { getInitialLocale,getDictionary, dictionaries } from '@/app/lib/i18n'; // 💥 引入 I18N 字典和默认语言
+import { Messages, dictionaries } from '@/app/lib/i18n';
 
 // 扩展 ImageItem 类型以确保 File 对象存在，用于本地编辑
 interface ExtendedImageItem extends ImageItem {
     fileObject: File;
 }
 
+// 💥 NEW: 定义接收的 Props 类型
+interface KoutuPortalProps {
+    t: Messages; // 从父组件 (app/page.tsx) 接收翻译字典
+}
+
 const MAX_IMAGES = 12;
 
-export default function KoutuPortal() {
+export default function KoutuPortal({ t }: KoutuPortalProps) {
 
-    // 💥 NEW: 管理语言状态
-    const [locale, setLocale] = useState<keyof typeof dictionaries>(getInitialLocale()); // 初始设置为中文
-    const t = getDictionary(locale); // 获取翻译函数
     const [images, setImages] = useState<ExtendedImageItem[]>([]);
     const [isPending, startTransition] = useTransition();
     const [globalMessage, setGlobalMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -361,7 +363,7 @@ export default function KoutuPortal() {
                                 item={item}
                                 onDelete={handleDelete}
                                 onEdit={handleEdit}
-                                locale={locale} // 💥 2. 确保在这里将 locale 属性传递给子组件
+                                t={t} // 💥 2. 确保在这里将 locale 属性传递给子组件
                             />
                         ))}
 

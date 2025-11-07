@@ -6,22 +6,20 @@ import { Trash2, CropIcon, X } from 'lucide-react'; // 引入 X 用于模态框
 import { useState } from 'react';
 import { ImageItem } from '@/app/lib/types'; // 确保 ImageItem 定义正确
 // 💥 引入本地国际化工具
-import { getDictionary, dictionaries } from '@/app/lib/i18n';
+import { Messages, dictionaries } from '@/app/lib/i18n';
 
 interface ImageGridItemProps {
   item: ImageItem;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
-  // 💥 NEW: 接收当前语言
-  locale: keyof typeof dictionaries;
+  t:Messages
 }
 
-export default function ImageGridItem({ item, onDelete, onEdit, locale }: ImageGridItemProps) {
+export default function ImageGridItem({ item, onDelete, onEdit, t }: ImageGridItemProps) {
   // 💥 NEW: 状态管理确认删除对话框的显示
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // 💥 获取当前语言的翻译
-  const t = getDictionary(locale);
+ 
 
   // 💥 使用翻译后的状态文本
   const translatedStatus = t.Status[item.status as keyof typeof t.Status];
@@ -72,7 +70,7 @@ export default function ImageGridItem({ item, onDelete, onEdit, locale }: ImageG
             <button
               onClick={() => onEdit(item.id)}
               className="p-1 bg-blue-500 text-white rounded-full transition-colors hover:bg-blue-700"
-              title={t.Portal.editButton} // 💥 使用翻译
+              title={t.Portal.cropButton} // 💥 使用翻译
             >
               <CropIcon className="w-4 h-4" />
             </button>

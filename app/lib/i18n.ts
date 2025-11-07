@@ -29,6 +29,7 @@ export interface Messages {
     confirmDeleteMessage: (name: string) => string;
     cancelButton: string;
     confirmButton: string;
+    cropButton: string;
     deleteButton: string;
   };
   Editor: {
@@ -74,6 +75,7 @@ const zhCNMessages: Messages = {
     confirmDeleteMessage: (name) => `您确定要删除图片 ${name} 吗？此操作不可撤销。`,
     cancelButton: "取消",
     confirmButton: "确定删除",
+    cropButton: "裁剪图片",
     deleteButton: "删除图片",
   },
   Editor: {
@@ -104,8 +106,8 @@ const enMessages: Messages = {
   },
   Welcome: {
     title: "Start Your Batch Processing Journey",
-    loginButton: "Login",
-    registerButton: "Register",
+    loginButton: "Log in",
+    registerButton: "Sign up",
     description: "Online background removal, supporting all scenarios of image background removal, fully automatic and fast.",
   },
   Portal: {
@@ -118,6 +120,7 @@ const enMessages: Messages = {
     confirmDeleteTitle: "Confirm Deletion",
     confirmDeleteMessage: (name) => `Are you sure you want to delete ${name}? This action cannot be undone.`,
     cancelButton: "Cancel",
+    cropButton: "Crop Image",
     confirmButton: "Confirm Delete",
     deleteButton: "Delete Image",
   },
