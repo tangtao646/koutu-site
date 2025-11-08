@@ -102,6 +102,7 @@ export default function HomePage() {
 
   // 💥 可选：如果 Session 正在加载，可以显示一个简单的加载状态
   if (status === 'loading') {
+    console.log('Session loading...');
       return (
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
               <span className="text-lg font-medium text-gray-400">Loading application...</span>
