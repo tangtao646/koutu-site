@@ -99,6 +99,8 @@ export default function HomePage() {
     // 💥 NEW: 传递 session 数据
     session: session,
   };
+  console.log('Current session:', session);
+  console.log('status:', status);
 
   // 💥 可选：如果 Session 正在加载，可以显示一个简单的加载状态
   if (status === 'loading') {
