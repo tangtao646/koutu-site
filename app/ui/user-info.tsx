@@ -9,7 +9,7 @@ export default function UserInfo() {
 
   // 正在加载中
   if (status === 'loading') {
-    return <div className="text-gray-500">Loading user...</div>;
+    return <div style={{ height: '50px' }}></div>;
   }
 
   // 未登录
