@@ -1,18 +1,20 @@
-// app/context/auth-provider.tsx
 'use client';
 
 import { SessionProvider as NextAuthSessionProvider } from 'next-auth/react';
-import { Session } from 'next-auth';
+// 💥 移除 Session 类型导入，因为它不再作为 prop 接收
+// import { Session } from 'next-auth'; 
 
+// 💥 简化 Props，只接收 children
 interface SessionProviderProps {
     children: React.ReactNode;
-    session: Session | null;
+    // 💥 移除 session: Session | null;
 }
 
-export function AuthProvider({ children, session }: SessionProviderProps) {
-    // 这是一个客户端组件，用于在应用中启用 session Hooks
+export function AuthProvider({ children }: SessionProviderProps) {
+    // 💥 停止将 session prop 传递给 NextAuthSessionProvider
+    // 这将强制 NextAuth 在客户端进行 API 调用，从而触发 'loading' 状态
     return (
-        <NextAuthSessionProvider session={session}>
+        <NextAuthSessionProvider>
             {children}
         </NextAuthSessionProvider>
     );
