@@ -9,7 +9,7 @@ interface SessionProviderProps {
     session: Session | null;
 }
 
-export function SessionProvider({ children, session }: SessionProviderProps) {
+export function AuthProvider({ children, session }: SessionProviderProps) {
     // 这是一个客户端组件，用于在应用中启用 session Hooks
     return (
         <NextAuthSessionProvider session={session}>

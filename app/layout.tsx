@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SessionProvider } from './context/session-provider'; // 导入封装的客户端 Provider
+import { AuthProvider } from './context/auth-provider'; // 导入封装的客户端 Provider
 import { getServerSession } from 'next-auth'; // 导入服务器端获取 Session 的函数
 
 
@@ -26,15 +26,15 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // 在服务器端获取 session
-    const session = await getServerSession();
+  const session = await getServerSession();
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-       <SessionProvider session={session}>
-                    {children}
-                </SessionProvider>
+        <AuthProvider session={session}>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

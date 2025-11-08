@@ -218,11 +218,3 @@ export default function AuthModal({ onClose, initialTab, t, onSocialLogin }: Aut
     );
 }
 
-// 示例用法（可以在 koutu-portal.tsx 或任意父组件中调用）
-/*
-// 假设在父组件中有以下状态:
-const [showAuthModal, setShowAuthModal] = useState(false);
-
-// 渲染时:
-{showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
-*/

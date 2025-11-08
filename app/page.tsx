@@ -1,13 +1,12 @@
-// app/page.tsx
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation'; // 💥 确保导入路径正确
+import { useSearchParams, useRouter } from 'next/navigation';
+// 💥 导入 useSession 来获取登录状态
+import { signIn, useSession } from 'next-auth/react';
 import Navbar from './ui/navbar';
 import KoutuPortal from './ui/koutu-portal';
 import AuthModal from './ui/auth-modal';
-import { signIn } from 'next-auth/react'; // 💥 引入 NextAuth 客户端函数
-// 💥 导入 I18N 工具和类型
 import { getDictionary, dictionaries, getInitialLocale, Messages } from './lib/i18n';
 
 // 确保与 AuthModal 中的类型一致
@@ -15,8 +14,11 @@ type AuthTab = 'login' | 'signup';
 
 export default function HomePage() {
   const primaryColor = 'text-blue-600';
-  const router = useRouter(); // 💥 初始化 useRouter
+  const router = useRouter();
   const searchParams = useSearchParams();
+
+  // 💥 NEW: 获取 Session 数据
+  const { data: session, status } = useSession();
 
   // ==========================================================
   // 1. I18N 状态管理 (组件首次挂载时动态获取语言)
@@ -33,12 +35,17 @@ export default function HomePage() {
 
   // NEW: 监听 URL 参数变化，控制模态框显示/隐藏
   useEffect(() => {
-    if (authParam === 'login' || authParam === 'signup') {
+    // 💥 只有在用户未登录时才显示 Auth Modal
+    if (!session && (authParam === 'login' || authParam === 'signup')) {
       setShowAuthModal(true);
     } else {
       setShowAuthModal(false);
+      // 如果用户在模态框弹出时登录了，也清除 URL 参数
+      if (session && authParam) {
+          router.replace(window.location.pathname);
+      }
     }
-  }, [authParam]);
+  }, [authParam, session, router]); // 依赖 session
 
   const handleCloseAuthModal = () => {
     setShowAuthModal(false);
@@ -77,12 +84,16 @@ export default function HomePage() {
 
   // 登录/注册点击处理：只负责添加 URL 参数
   const handleLoginClick = useCallback(() => {
+    // 如果已登录，不执行操作
+    if (session) return;
     router.push(window.location.pathname + '?auth=login');
-  }, [router]);
+  }, [router, session]);
 
   const handleSignupClick = useCallback(() => {
+    // 如果已登录，不执行操作
+    if (session) return;
     router.push(window.location.pathname + '?auth=signup');
-  }, [router]);
+  }, [router, session]);
 
 
   // 构造传递给 Navbar 的 Props
@@ -92,8 +103,18 @@ export default function HomePage() {
     t,
     onLoginClick: handleLoginClick,
     onSignupClick: handleSignupClick,
+    // 💥 NEW: 传递 session 数据
+    session: session,
   };
 
+  // 💥 可选：如果 Session 正在加载，可以显示一个简单的加载状态
+  if (status === 'loading') {
+      return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+              <span className="text-lg font-medium text-gray-700">Loading application...</span>
+          </div>
+      );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
