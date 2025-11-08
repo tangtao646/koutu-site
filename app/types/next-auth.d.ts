@@ -9,6 +9,7 @@ declare module 'next-auth' {
   interface User extends DefaultUser {
     id: string; // 💥 添加 id 字段
   }
+  
 
   /**
    * 扩展 Session 对象，确保 session.user 中包含 id
