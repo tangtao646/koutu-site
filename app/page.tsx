@@ -20,16 +20,11 @@ export default function HomePage() {
   // 💥 NEW: 获取 Session 数据
   const { data: session, status } = useSession();
 
-  // ==========================================================
-  // 1. I18N 状态管理 (组件首次挂载时动态获取语言)
-  // ==========================================================
+ 
   const [locale, setLocale] = useState<keyof typeof dictionaries>(getInitialLocale());
   // 使用 useMemo 优化 t 的获取，确保在 locale 变化时更新
   const t: Messages = useMemo(() => getDictionary(locale), [locale]);
 
-  // ==========================================================
-  // 2. Auth Modal 状态管理 (由 URL 参数驱动)
-  // ==========================================================
   const authParam = searchParams.get('auth');
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -53,9 +48,7 @@ export default function HomePage() {
     router.replace(window.location.pathname);
   };
 
-  // ==========================================================
-  // 3. Portal 重置和导航逻辑
-  // ==========================================================
+
   const [portalKey, setPortalKey] = useState(0);
 
   // 重置功能：用于点击 Logo/Home 时的逻辑
@@ -111,7 +104,7 @@ export default function HomePage() {
   if (status === 'loading') {
       return (
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
-              <span className="text-lg font-medium text-gray-700">Loading application...</span>
+              <span className="text-lg font-medium text-gray-400">Loading application...</span>
           </div>
       );
   }
