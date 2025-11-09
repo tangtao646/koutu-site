@@ -8,6 +8,7 @@ import Navbar from './ui/navbar';
 import KoutuPortal from './ui/koutu-portal';
 import AuthModal from './ui/auth-modal';
 import { getDictionary, dictionaries, getInitialLocale, Messages } from './lib/i18n';
+import MyLoading from './ui/my-loading';
 
 // 确保与 AuthModal 中的类型一致
 type AuthTab = 'login' | 'signup';
@@ -106,9 +107,7 @@ export default function HomePage() {
   if (status === 'loading') {
     console.log('Session loading...');
       return (
-          <div className="min-h-screen flex items-center justify-center bg-gray-50">
-              <span className="text-lg font-medium text-gray-400">Loading application...</span>
-          </div>
+         <MyLoading message="" />
       );
   }
 
